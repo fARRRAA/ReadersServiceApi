@@ -1,7 +1,9 @@
 
+using LibraryWebApi.Services;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.EntityFrameworkCore;
 using ReadersServiceApi.dbContext;
+using ReadersServiceApi.Interfaces;
 
 namespace ReadersServiceApi
 {
@@ -17,6 +19,8 @@ namespace ReadersServiceApi
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<IReaderService, ReaderService>();
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",
@@ -27,8 +31,10 @@ namespace ReadersServiceApi
                                .AllowAnyHeader();
                     });
             });
+
             builder.Services.AddDbContext<ReadersApiDb>(options =>
      options.UseSqlServer(builder.Configuration.GetConnectionString("TestDbString")), ServiceLifetime.Scoped);
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
