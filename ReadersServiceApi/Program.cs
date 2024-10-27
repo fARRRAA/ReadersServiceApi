@@ -19,8 +19,9 @@ namespace ReadersServiceApi
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<HttpClient>();
             builder.Services.AddScoped<IReaderService, ReaderService>();
-
+            
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",

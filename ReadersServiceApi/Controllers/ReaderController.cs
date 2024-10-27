@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using ReadersServiceApi.Interfaces;
 using System.Reflection.PortableExecutable;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -33,7 +34,7 @@ namespace LibraryWebApi.Controllers
         }
 
         [HttpPost("addNewReader")]
-        public async Task<IActionResult> AddNewReader([FromQuery]createReader reader)
+        public async Task<IActionResult> AddNewReader([FromQuery] createReader reader)
         {
 
             if (_reader.ReaderExists(reader.Login))
@@ -55,7 +56,7 @@ namespace LibraryWebApi.Controllers
         }
 
         [HttpPut("updateReaderById/{id}")]
-        public async Task<IActionResult> UpdateReaderById(int id, [FromQuery]createReader reader)
+        public async Task<IActionResult> UpdateReaderById(int id, [FromQuery] createReader reader)
         {
 
             if (!_reader.GetAll().Any(r => r.Id_User == id))
@@ -72,7 +73,7 @@ namespace LibraryWebApi.Controllers
                     error = BadRequest("fill in all fields")
                 });
             }
-            await _reader.UpdateReaderById(id,reader);
+            await _reader.UpdateReaderById(id, reader);
             return Ok();
         }
 
@@ -91,7 +92,7 @@ namespace LibraryWebApi.Controllers
             return Ok();
         }
 
-        [HttpGet("getReaderById{id}")]
+        [HttpGet("getReaderById/{id}")]
         public async Task<IActionResult> GetReaderById(int id)
         {
 
@@ -130,5 +131,24 @@ namespace LibraryWebApi.Controllers
 
             return Ok("you admin");
         }
+        [HttpPost("uploadpfp")]
+        public async Task<IActionResult> UploadProfilePhoto(int readerId, IFormFile photo)
+        {
+            var url = await _reader.UploadProfilePhoto(readerId, photo);
+            return new OkObjectResult(new { url = url });
+        }
+        [HttpPut("updatepfp/{readerId}")]
+        public async Task<IActionResult> UpdateProfilePhoto(int readerId, IFormFile photo)
+        {
+            var url = await _reader.UpdateProfilePhoto(readerId, photo);
+            return new OkObjectResult(new { url = url });
+        }
+
+        [HttpDelete("deletepfp/{readerId}")]
+        public async Task<IActionResult> DeleteProfilePhoto(int readerId)
+        {
+            await _reader.DeleteProfilePhoto(readerId);
+            return Ok();
+        } 
     }
 }

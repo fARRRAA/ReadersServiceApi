@@ -14,6 +14,9 @@ namespace ReadersServiceApi.Interfaces
         //public List<RentHistory> GetReadersRentals(int id);
         public bool ReaderExists(string login);
         public List<Readers> GetAll();
-
+        public  Task<string> UploadProfilePhoto(int readerId,IFormFile photo);
+        public Task<string> UpdateProfilePhoto(int readerId, IFormFile photo);
+        public  Task DeleteProfilePhoto(int readerId);
+        public string removeUrl(string url);
     }
 }

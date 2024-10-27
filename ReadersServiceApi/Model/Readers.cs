@@ -14,6 +14,6 @@ namespace ReadersServiceApi.Model
         [ForeignKey(nameof(Role))]
         public int? Id_Role { get; set; } = 2;
         public Roles Role { get; set; }
-
+        public string Profile_Photo { get; set; }
     }
 }

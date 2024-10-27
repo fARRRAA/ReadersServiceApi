@@ -5,14 +5,17 @@ using ReadersServiceApi.Model;
 using ReadersServiceApi.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 
 namespace LibraryWebApi.Services
 {
 
-    public class ReaderService(ReadersApiDb context, IHttpContextAccessor httpContextAccessor) : IReaderService
+    public class ReaderService(ReadersApiDb context, IHttpContextAccessor httpContextAccessor,HttpClient httpClient) : IReaderService
     {
         readonly ReadersApiDb _context = context;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly HttpClient _httpClient=httpClient;
+        private readonly string URL = "https://localhost:7270/api/Photos";
         public List<Readers> GetAllReaders([FromQuery] int? page, [FromQuery] int? pageSize)
         {
             var users = _context.Readers;
@@ -74,6 +77,82 @@ namespace LibraryWebApi.Services
         public List<Readers> GetAll()
         {
             return _context.Readers.ToList();
+        }
+
+        public async Task<string> UploadProfilePhoto(int readerId, IFormFile file)
+        {
+            using (var content = new MultipartFormDataContent())
+            {
+                var fileContent = new StreamContent(file.OpenReadStream());
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+                content.Add(fileContent, "file", file.FileName);
+
+                var response = await _httpClient.PostAsync($"{URL}/upload",content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var photoURL = $"{URL}/photo/{file.FileName}";
+                    var reader = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == readerId);
+                    reader.Profile_Photo = photoURL;
+                    await _context.SaveChangesAsync();
+                    return photoURL;
+                }
+                else
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+
+                    return $"{response.StatusCode}, {errorContent}";
+                }
+
+            }
+        }
+
+        public async Task<string> UpdateProfilePhoto(int readerId,IFormFile file)
+        {
+            var reader = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == readerId);
+            var fileName = removeUrl(reader.Profile_Photo);
+
+            using (var content = new MultipartFormDataContent())
+            {
+                var fileContent = new StreamContent(file.OpenReadStream());
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+                content.Add(fileContent, "file", file.FileName);
+
+                var response = await _httpClient.PutAsync($"{URL}/update/{fileName}", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var photoURL = $"{URL}/photo/{file.FileName}";
+                    reader.Profile_Photo = photoURL;
+                    await _context.SaveChangesAsync();
+                    return photoURL;
+                }
+                else
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    return $"{response.StatusCode}, {errorContent}";
+                }
+            }
+        }
+
+        public async Task DeleteProfilePhoto(int readerId)
+        {
+            var reader = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == readerId);
+            var fileName = removeUrl(reader.Profile_Photo);
+            var response = await _httpClient.DeleteAsync($"{URL}/delete/{fileName}");
+            if(response.IsSuccessStatusCode)
+            {
+                reader.Profile_Photo = "";
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public string removeUrl(string url)
+        {
+            var remove = "https://localhost:7270/api/Photos/photo/";
+            if (url.StartsWith(remove))
+            {
+                return url.Substring(remove.Length);
+            }
+            return url.Substring(remove.Length);
         }
     }
 }
