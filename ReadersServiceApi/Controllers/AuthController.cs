@@ -1,17 +1,16 @@
-﻿using ReadersServiceApi.dbContext;
-using ReadersServiceApi.Model;
-using ReadersServiceApi.Requests;
+﻿using ReadersServiceApi.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using ReadersServiceApi.dbContext;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.EntityFrameworkCore;
+using ReadersServiceApi.Model;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-namespace LibraryWebApi.Controllers
+namespace ReadersServiceApi.Controllers
 {
-
+    
     public class AuthController : Controller
     {
         readonly ReadersApiDb _context;
@@ -25,8 +24,8 @@ namespace LibraryWebApi.Controllers
 
         }
 
-        [HttpPost("registerReader")]
-        public async Task<ActionResult> Register([FromBody]createReader reader)
+        [HttpPost("api/Auth/registerReader")]
+        public async Task<ActionResult> Register([FromBody] createReader reader)
         {
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login && r.Password == reader.Password);
             if (check != null)
@@ -64,7 +63,7 @@ namespace LibraryWebApi.Controllers
                 token = token
             });
         }
-        [HttpGet("loginReader")]
+        [HttpGet("api/Auth/loginReader")]
         public async Task<ActionResult> Login(string login, string password)
         {
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == login);
@@ -107,10 +106,10 @@ namespace LibraryWebApi.Controllers
         public string GenerateToken(Readers reader)
         {
             var claims = new List<Claim>
-            {
-                new(ClaimTypes.Authentication, reader.Id_User.ToString()),
-                new(ClaimTypes.Role, reader.Id_Role switch { 1 => "admin", 2 => "user" })
-            };
+    {
+        new(ClaimTypes.Authentication, reader.Id_User.ToString()),
+        new(ClaimTypes.Role, reader.Id_Role switch { 1 => "admin", 2 => "user" })
+    };
 
             var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                 SecurityAlgorithms.HmacSha256);
